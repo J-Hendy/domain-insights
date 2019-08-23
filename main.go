@@ -1,7 +1,13 @@
 package main
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"os"
+
+	"github.com/J-Hendy/domain-insights/properties"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
 )
 
 func main() {
@@ -11,5 +17,22 @@ func main() {
 			"message": "pong",
 		})
 	})
+	r.GET("/properties", serveProperties)
 	r.Run() // listen and serve on 0.0.0.0:8080
+}
+
+func serveProperties(c *gin.Context) {
+	file, err := os.Open("./data/sales-results.json")
+	if err != nil {
+		logrus.Errorf("fail to load properties %v", err.Error())
+	}
+	b, _ := ioutil.ReadAll(file)
+	var properties []*properties.PropertyDetails
+	if err = json.Unmarshal(b, &properties); err != nil {
+		logrus.Errorf("fail to unmarshal bytes to property list %v", err)
+		c.JSON(500, gin.H{"err": "some error"})
+		return
+	}
+
+	c.JSON(200, &properties)
 }
