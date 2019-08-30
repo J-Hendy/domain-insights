@@ -9,3 +9,7 @@ Uses Alpine Linux 3.9
 Gin Go HTTP web framework
 
 > https://gin-gonic.com/
+
+GORM
+
+> https://gorm.io/docs/

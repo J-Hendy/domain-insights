@@ -1,7 +1,10 @@
 package properties
 
+import "github.com/jinzhu/gorm"
+
 // PropertyDetails yeah!
 type PropertyDetails struct {
+	gorm.Model
 	UnitNumber           string      `json:"unitNumber"`
 	StreetNumber         string      `json:"streetNumber"`
 	StreetNamens         string      `json:"streetNamens"`
@@ -17,7 +20,6 @@ type PropertyDetails struct {
 	Price                int         `json:"price"`
 	Result               string      `json:"result"`
 	Agent                string      `json:"agent"`
-	ID                   int64       `json:"id"`
 	AgencyID             int64       `json:"agencyId"`
 	AgencyName           string      `json:"agencyName"`
 	AgencyProfilePageURL string      `json:"agencyProfilePageUrl"`
