@@ -8,9 +8,17 @@ import (
 	"github.com/J-Hendy/domain-insights/properties"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
 func main() {
+	db, err := gorm.Open("postgres", "host=db port=5432 user=postgres sslmode=disable dbname=domain_insights password=jupiter")
+	defer db.Close()
+	if err != nil {
+		logrus.Fatalf("could not establish connection to the database %v", err.Error())
+	}
 	r := gin.Default()
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{

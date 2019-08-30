@@ -1,0 +1,26 @@
+version: "3"
+services:
+  api:
+    image: golang:1.12
+    working_dir: /app/domain-insights
+    environment:
+      GO111MODULE: "on"
+    volumes:
+      - .:/app/domain-insights
+      - go-libs:/go/src
+      - go-bin:/go/bin
+    links:
+      - db
+    command: ["sh", "-c", "go run main.go"]
+    ports:
+      - 8080:8080
+  db:
+    image: postgres:9.6
+    environment:
+      POSTGRES_PASSWORD: jupiter
+      POSTGRES_DB: domain_insights
+    ports:
+      - 5433:5432
+volumes:
+  go-libs: {}
+  go-bin: {}
