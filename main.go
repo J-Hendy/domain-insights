@@ -2,12 +2,14 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
+
 	"os"
 
 	"github.com/J-Hendy/domain-insights/properties"
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -21,18 +23,30 @@ func main() {
 	db, err := gorm.Open("postgres", "host=db port=5432 user=postgres sslmode=disable dbname=domain_insights password=jupiter")
 	// defer db.Close()
 	if err != nil {
-		logrus.Fatalf("could not establish connection to the database %v", err.Error())
+		log.Fatalf("could not establish connection to the database %v", err.Error())
 	}
-	
+
 	// x()
 
 	// Migrate the schema
 	db.AutoMigrate(&properties.PropertyDetails{})
-	
+
 	handler := &PropertyHandler{
 		DB: db,
 	}
-	
+
+	count, err := handler.PropertiesCount()
+
+	if err != nil {
+		log.Fatalf("couldn't get properties count from db %v", err.Error())
+	}
+	if count == 0 {
+		log.Info("found empty table for properties, will import data from json")
+		if err = handler.loadPropertiesFromJSON(); err != nil {
+			log.Fatal(err.Error())
+		}
+	}
+
 	r := gin.Default()
 	r.GET("/ping", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -48,24 +62,41 @@ type PropertyHandler struct {
 	DB *gorm.DB
 }
 
-// ServeProperties return the list of properties
-func (handler *PropertyHandler)ServeProperties(c *gin.Context) {
+// PropertiesCount shows the total count of properties in db
+func (handler *PropertyHandler) PropertiesCount() (int, error) {
+	var count int
+	err := handler.DB.Table("property_details").Count(&count).Error
+	return count, err
+}
+
+func (handler *PropertyHandler) loadPropertiesFromJSON() error {
 	file, err := os.Open("./data/sales-results.json")
 	if err != nil {
-		logrus.Errorf("fail to load properties %v", err.Error())
+		return fmt.Errorf("fail to load properties %v", err.Error())
 	}
 
 	b, _ := ioutil.ReadAll(file)
 	var properties []*properties.PropertyDetails
 	if err = json.Unmarshal(b, &properties); err != nil {
-		logrus.Errorf("fail to unmarshal bytes to property list %v", err)
-		c.JSON(500, gin.H{"err": "some error"})
-		return
+		return fmt.Errorf("fail to unmarshal bytes to property list %v", err)
 	}
 	for _, item := range properties {
-	
-		handler.DB.Create(item)
+		if err = handler.DB.Create(item).Error; err != nil {
+			return fmt.Errorf("fail to save property %s to db with error %s", item.ID, err.Error())
+		}
 	}
+	
+	return nil
+}
 
+// ServeProperties return the list of properties
+func (handler *PropertyHandler) ServeProperties(c *gin.Context) {
+	var properties []*properties.PropertyDetails
+	err := handler.DB.Find(&properties).Error
+	if err != nil {
+		log.Errorf("couldn't get properties from db %s ", err.Error())
+		c.JSON(500, gin.H{"err": "some internal error, please try again later"})
+		return
+	}
 	c.JSON(200, &properties)
 }

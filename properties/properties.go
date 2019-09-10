@@ -1,10 +1,13 @@
 package properties
 
-import "github.com/jinzhu/gorm"
+import "time"
 
 // PropertyDetails yeah!
 type PropertyDetails struct {
-	gorm.Model
+	ID                   uint `gorm:"primary_key",json:"uid"`
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
+	DeletedAt            *time.Time  `sql:"index"`
 	UnitNumber           string      `json:"unitNumber"`
 	StreetNumber         string      `json:"streetNumber"`
 	StreetNamens         string      `json:"streetNamens"`
@@ -24,6 +27,7 @@ type PropertyDetails struct {
 	AgencyName           string      `json:"agencyName"`
 	AgencyProfilePageURL string      `json:"agencyProfilePageUrl"`
 	PropertyDetailsURL   string      `json:"propertyDetailsUrl"`
+	DomainID int `json:"id"`
 }
 
 // GeoLocation yo!
