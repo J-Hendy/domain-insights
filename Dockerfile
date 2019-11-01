@@ -1,4 +1,4 @@
-FROM golang:1.12-alpine3.9 AS build
+FROM golang:1.13.3-alpine3.10 AS build
 
 RUN apk add --no-cache git openssh
 
@@ -14,7 +14,7 @@ RUN go mod download
 
 RUN go build -o bin/domain-insights .
 
-FROM alpine:3.9
+FROM alpine:3.10
 
 RUN apk add --no-cache bash ca-certificates curl
 

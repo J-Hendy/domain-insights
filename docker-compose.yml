@@ -1,7 +1,7 @@
 version: "3"
 services:
   api:
-    image: golang:1.12
+    image: golang:1.13.3
     working_dir: /app/domain-insights
     environment:
       GO111MODULE: "on"

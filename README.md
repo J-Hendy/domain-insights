@@ -1,7 +1,7 @@
 # domain-insights
 Insights from house sales data via domain.com.au API.
 
-Uses Alpine Linux 3.9
+Uses Alpine Linux 3.10
 
 > https://alpinelinux.org/about/
 

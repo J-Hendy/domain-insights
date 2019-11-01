@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"strconv"
 
 	"os"
 
@@ -85,18 +86,40 @@ func (handler *PropertyHandler) loadPropertiesFromJSON() error {
 			return fmt.Errorf("fail to save property %s to db with error %s", item.ID, err.Error())
 		}
 	}
-	
+
 	return nil
 }
 
 // ServeProperties return the list of properties
 func (handler *PropertyHandler) ServeProperties(c *gin.Context) {
 	var properties []*properties.PropertyDetails
-	err := handler.DB.Find(&properties).Error
+	postcode := c.DefaultQuery("postcode", "3000")
+	if err := validateForm(c); err != nil {
+		log.Errorf("got error when validate the request parameters %v", err)
+		c.JSON(400, gin.H{"msg": "please provide valid postcode"})
+		return
+	}
+	err := handler.DB.Where("postcode = ?", postcode).Find(&properties).Error
 	if err != nil {
 		log.Errorf("couldn't get properties from db %s ", err.Error())
 		c.JSON(500, gin.H{"err": "some internal error, please try again later"})
 		return
 	}
 	c.JSON(200, &properties)
+}
+
+func validateForm(c *gin.Context) error {
+	validateError := fmt.Errorf("invalid postcode")
+	//TODO: validate postcode
+	// length must be 4
+	// the string should be able to parse to integer
+	postcode := c.DefaultQuery("postcode", "3000")
+	if len(postcode) != 4 {
+		return validateError
+	}
+	_, err := strconv.Atoi(postcode)
+	if err != nil {
+		return validateError
+	}
+	return nil
 }
